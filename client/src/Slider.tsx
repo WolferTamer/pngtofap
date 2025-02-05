@@ -6,7 +6,7 @@ function Slider() {
     const [width, setWidth] = useState(1)
     const [height, setHeight] = useState(1)
     const [file, setFile] = useState(reactLogo);
-    const [scale, setScale] = useState(0)
+    const [scale, setScale] = useState({horizontal: 0, vertical: 0})
 
 
     const handleHor = (event: ChangeEvent<HTMLInputElement>) => {
@@ -28,8 +28,12 @@ function Slider() {
         setFile(URL.createObjectURL(event.target.files![0]));
     }
 
-    const handleScale = (event: ChangeEvent<HTMLInputElement>) => {
-        setScale(Number(event.target.value));
+    const handleVerScale = (event: ChangeEvent<HTMLInputElement>) => {
+        setScale({horizontal: scale.horizontal, vertical:Number(event.target.value)});
+    }
+
+    const handleHorScale = (event: ChangeEvent<HTMLInputElement>) => {
+        setScale({horizontal: Number(event.target.value), vertical:scale.vertical});
     }
 
     const handleExport = (_event: MouseEvent<HTMLButtonElement>) => {
@@ -52,8 +56,8 @@ function Slider() {
         let colors: number[][] = []
         for (var i = 1; i < width+1; i++) {
             for(var j =1; j < height+1; j++) {
-                let y = Math.floor(((j*((300+scale)/(height+1))+offset.vertical-(scale/2))/300)*imageData.height)
-                let x = Math.floor(((i*((300+scale)/(width+1))+offset.horizontal-(scale/2))/300)*imageData.width)
+                let y = Math.floor(((j*((300+scale.horizontal)/(height+1))+offset.vertical-(scale.horizontal/2))/300)*imageData.height)
+                let x = Math.floor(((i*((300+scale.vertical)/(width+1))+offset.horizontal-(scale.vertical/2))/300)*imageData.width)
                 let index = ((y*imageData.width)+x)*4
                 colors.push([pixels[index],pixels[index+1],pixels[index+2],pixels[index+3]])
                 console.log(`x: ${x}, y: ${y}, ${[pixels[index],pixels[index+1],pixels[index+2],pixels[index+3]]}`)
@@ -77,7 +81,7 @@ function Slider() {
         const element = document.createElement("a");
         const newFile = new Blob([fileText], {type: 'text/plain'});
         element.href = URL.createObjectURL(newFile);
-        element.download = "test.fap";
+        element.download = "palette.fap";
         document.body.appendChild(element); // Required for this to work in FireFox
         element.click();
     }
@@ -86,9 +90,9 @@ function Slider() {
         let indents = [];
             for (var i = 1; i < width+1; i++) {
                 for(var j =1; j < height+1; j++) {
-                    indents.push((<line x1="0" y1={j*((300+scale)/(height+1))+offset.vertical-(scale/2)} x2={300} y2={j*((300+scale)/(height+1))+offset.vertical-(scale/2)} stroke="white"/>))
+                    indents.push((<line x1="0" y1={j*((300+scale.horizontal)/(height+1))+offset.vertical-(scale.horizontal/2)} x2={300} y2={j*((300+scale.horizontal)/(height+1))+offset.vertical-(scale.horizontal/2)} stroke="white"/>))
                 }
-                indents.push((<line x1={i*((300+scale)/(width+1))+offset.horizontal-(scale/2)} y1="0" x2={i*((300+scale)/(width+1))+offset.horizontal-(scale/2)} y2={300} stroke="white"/>))
+                indents.push((<line x1={i*((300+scale.vertical)/(width+1))+offset.horizontal-(scale.vertical/2)} y1="0" x2={i*((300+scale.vertical)/(width+1))+offset.horizontal-(scale.vertical/2)} y2={300} stroke="white"/>))
             }
         return indents;
     }
@@ -103,16 +107,18 @@ function Slider() {
             
         </svg>
         <div className="display-vertically stretch">
-            <h5>Scale</h5>
-            <input type="range" min="-150" max="30" value={scale} className="slider" id="scale" onChange={handleScale}/>
+            <h5>Vertical Scale</h5>
+            <input type="range" min="-150" max="30" value={scale.horizontal} className="slider" id="horScale" onChange={handleHorScale}/>
+            <h5>Horizontal Scale</h5>
+            <input type="range" min="-150" max="30" value={scale.vertical} className="slider" id="verScale" onChange={handleVerScale}/>
             <h5>Vertical Offset</h5>
             <input type="range" min="-50" max="50" value={offset.vertical} className="slider" id="vertical" onChange={handleVer}/>
             <h5>Horizontal Offset</h5>
             <input type="range" min="-50" max="50" value={offset.horizontal} className="slider" id="horizontal" onChange={handleHor}/>
             <h5>Number of Rows</h5>
-            <input type="number" min="1" max="100" value={width} className="gridsize" id="gridwidth" placeholder="Grid Width" onChange={handleWidth}/>
+            <input type="number" min="1" max="100" value={height} className="gridsize" id="gridwidth" placeholder="Grid Width" onChange={handleHeight}/>
             <h5>Number of Columns</h5>
-            <input type="number" min="1" max="100" value={height} className="gridsize" id="gridheight" placeholder="Grid Height" onChange={handleHeight}/>
+            <input type="number" min="1" max="100" value={width} className="gridsize" id="gridheight" placeholder="Grid Height" onChange={handleWidth}/>
             <h5>Upload Image:</h5>
             <input type="file" onChange={handleUpload} />
         </div>
