@@ -1,6 +1,5 @@
-import { ChangeEvent, MouseEvent, ReactNode, SyntheticEvent, useState } from "react";
+import { ChangeEvent, MouseEvent, useState } from "react";
 import reactLogo from './assets/react.svg'
-import React from "react";
 
 function Slider() {
     const [offset, setOffset] = useState({horizontal: 0, vertical: 0});
@@ -33,7 +32,7 @@ function Slider() {
         setScale(Number(event.target.value));
     }
 
-    const handleExport = (event: MouseEvent<HTMLButtonElement>) => {
+    const handleExport = (_event: MouseEvent<HTMLButtonElement>) => {
         const image = new Image();
         image.src = file;
         const canvas = document.createElement('canvas');
