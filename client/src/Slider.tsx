@@ -69,7 +69,7 @@ function Slider({current} : SliderProps) {
         // [red, green, blue, alpha]
         let colors: number[][] = []
         for(let grid of Object.keys(width)) {
-            for (var i = 1; i < width[name]+1; i++) {
+            for (var i = 1; i < width[grid]+1; i++) {
                 for(var j =1; j < height[grid]+1; j++) {
                     let y = Math.floor(((j*((500+scale[grid].horizontal)/(height[grid]+1))+offset[grid].vertical-(scale[grid].horizontal/2))/500)*imageData.height)
                     let x = Math.floor(((i*((500+scale[grid].vertical)/(width[grid]+1))+offset[grid].horizontal-(scale[grid].vertical/2))/500)*imageData.width)
