@@ -1,27 +1,40 @@
-import { ChangeEvent, MouseEvent, useState } from "react";
+import { ChangeEvent, MouseEvent, useState, useEffect } from "react";
 import reactLogo from './assets/react.svg'
-
-function Slider() {
-    const [offset, setOffset] = useState({horizontal: 0, vertical: 0});
-    const [width, setWidth] = useState(1)
-    const [height, setHeight] = useState(1)
+interface SliderProps {
+    current: string;
+  }
+function Slider({current} : SliderProps) {
+    const [offset, setOffset] = useState({[current]: {horizontal: 0, vertical: 0}});
+    const [width, setWidth] = useState({[current]: 1})
+    const [height, setHeight] = useState({[current]: 1})
     const [file, setFile] = useState(reactLogo);
-    const [scale, setScale] = useState({horizontal: 0, vertical: 0})
+    const [scale, setScale] = useState({[current]:{horizontal: 0, vertical: 0}})
+    const [name, setName] = useState(current)
+
+    useEffect( () => {
+        if(!scale[current]) {
+            setOffset({...offset, [current]: {horizontal: 0, vertical: 0}})
+            setScale({...scale, [current]: {horizontal: 0, vertical: 0}})
+            setWidth({...width, [current]: 1})
+            setHeight({...height, [current]: 1})
+        }
+        setName(current)
+    }, [current])
 
 
     const handleHor = (event: ChangeEvent<HTMLInputElement>) => {
-        setOffset({horizontal: Number(event.target.value), vertical: offset.vertical})
+        setOffset({...offset, [name]: {horizontal: Number(event.target.value), vertical: offset[name].vertical || 0}})
     }
 
     const handleVer = (event: ChangeEvent<HTMLInputElement>) => {
-        setOffset({horizontal: offset.horizontal, vertical: Number(event.target.value)})
+        setOffset({...offset, [name]: {horizontal: offset[name].horizontal || 0, vertical: Number(event.target.value)}})
     }
 
     const handleWidth = (event: ChangeEvent<HTMLInputElement>) => {
-        setWidth(Number(event.target.value))
+        setWidth({...width, [name]: Number(event.target.value)})
     }
     const handleHeight = (event: ChangeEvent<HTMLInputElement>) => {
-        setHeight(Number(event.target.value))
+        setHeight({...height, [name]: Number(event.target.value)})
     }
 
     const handleUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -29,11 +42,12 @@ function Slider() {
     }
 
     const handleVerScale = (event: ChangeEvent<HTMLInputElement>) => {
-        setScale({horizontal: scale.horizontal, vertical:Number(event.target.value)});
+        setScale({...scale, [name]: {horizontal: scale[name].horizontal || 0, vertical:Number(event.target.value)}});
     }
 
     const handleHorScale = (event: ChangeEvent<HTMLInputElement>) => {
-        setScale({horizontal: Number(event.target.value), vertical:scale.vertical});
+        scale[name] = {horizontal: Number(event.target.value), vertical:scale[name].vertical || 0}
+        setScale({...scale, [name]: {horizontal: Number(event.target.value), vertical:scale[name].vertical || 0}});
     }
 
     const handleExport = (_event: MouseEvent<HTMLButtonElement>) => {
@@ -54,15 +68,17 @@ function Slider() {
         // Each pixel is represented by 4 consecutive values in the array:
         // [red, green, blue, alpha]
         let colors: number[][] = []
-        for (var i = 1; i < width+1; i++) {
-            for(var j =1; j < height+1; j++) {
-                let y = Math.floor(((j*((300+scale.horizontal)/(height+1))+offset.vertical-(scale.horizontal/2))/300)*imageData.height)
-                let x = Math.floor(((i*((300+scale.vertical)/(width+1))+offset.horizontal-(scale.vertical/2))/300)*imageData.width)
-                let index = ((y*imageData.width)+x)*4
-                colors.push([pixels[index],pixels[index+1],pixels[index+2],pixels[index+3]])
-                console.log(`x: ${x}, y: ${y}, ${[pixels[index],pixels[index+1],pixels[index+2],pixels[index+3]]}`)
-            }
+        for(let grid of Object.keys(width)) {
+            for (var i = 1; i < width[name]+1; i++) {
+                for(var j =1; j < height[grid]+1; j++) {
+                    let y = Math.floor(((j*((500+scale[grid].horizontal)/(height[grid]+1))+offset[grid].vertical-(scale[grid].horizontal/2))/500)*imageData.height)
+                    let x = Math.floor(((i*((500+scale[grid].vertical)/(width[grid]+1))+offset[grid].horizontal-(scale[grid].vertical/2))/500)*imageData.width)
+                    let index = ((y*imageData.width)+x)*4
+                    colors.push([pixels[index],pixels[index+1],pixels[index+2],pixels[index+3]])
+                    console.log(`x: ${x}, y: ${y}, ${[pixels[index],pixels[index+1],pixels[index+2],pixels[index+3]]}`)
+                }
 
+            }
         }
         let fileText = ''
         for(let index = 0; index < colors.length; index++) {
@@ -75,7 +91,6 @@ function Slider() {
             fileText += `r=@Variant(\\0\\0\\0\\x86\\x${r.toString(16)})\n`
             fileText += `g=@Variant(\\0\\0\\0\\x86\\x${g.toString(16)})\n`
             fileText += `b=@Variant(\\0\\0\\0\\x86\\x${b.toString(16)})\n\n`
-            console.log()
         }
 
         const element = document.createElement("a");
@@ -87,19 +102,29 @@ function Slider() {
     }
 
     const renderLines = () => {
+        
         let indents = [];
-            for (var i = 1; i < width+1; i++) {
-                for(var j =1; j < height+1; j++) {
-                    indents.push((<line x1="0" y1={j*((300+scale.horizontal)/(height+1))+offset.vertical-(scale.horizontal/2)} x2={300} y2={j*((300+scale.horizontal)/(height+1))+offset.vertical-(scale.horizontal/2)} stroke="white"/>))
+        for(let grid of Object.keys(width)) {
+            const stroke = grid === name ? "white" : "darkslategray"
+            for (var i = 1; i < width[grid]+1; i++) {
+                for(var j =1; j < height[grid]+1; j++) {
+                    indents.push((<line x1="0" y1={j*((500+scale[grid].horizontal)/(height[grid]+1))+offset[grid].vertical-(scale[grid].horizontal/2)} x2={500} y2={j*((500+scale[grid].horizontal)/(height[grid]+1))+offset[grid].vertical-(scale[grid].horizontal/2)} stroke={stroke}/>))
                 }
-                indents.push((<line x1={i*((300+scale.vertical)/(width+1))+offset.horizontal-(scale.vertical/2)} y1="0" x2={i*((300+scale.vertical)/(width+1))+offset.horizontal-(scale.vertical/2)} y2={300} stroke="white"/>))
+                indents.push((<line x1={i*((500+scale[grid].vertical)/(width[grid]+1))+offset[grid].horizontal-(scale[grid].vertical/2)} y1="0" x2={i*((500+scale[grid].vertical)/(width[grid]+1))+offset[grid].horizontal-(scale[grid].vertical/2)} y2={500} stroke={stroke}/>))
             }
+        }
+        for (var i = 1; i < width[name]+1; i++) {
+            for(var j =1; j < height[name]+1; j++) {
+                indents.push((<line x1="0" y1={j*((500+scale[name].horizontal)/(height[name]+1))+offset[name].vertical-(scale[name].horizontal/2)} x2={500} y2={j*((500+scale[name].horizontal)/(height[name]+1))+offset[name].vertical-(scale[name].horizontal/2)} stroke="white"/>))
+            }
+            indents.push((<line x1={i*((500+scale[name].vertical)/(width[name]+1))+offset[name].horizontal-(scale[name].vertical/2)} y1="0" x2={i*((500+scale[name].vertical)/(width[name]+1))+offset[name].horizontal-(scale[name].vertical/2)} y2={500} stroke="white"/>))
+        }
         return indents;
     }
     
     return (<div className="display-horizontally">
         
-        <svg width="300" height="300">
+        <svg width="500" height="500">
             <image href={file} width="100%" height="100%" preserveAspectRatio="none"/>
             {
                 renderLines()
@@ -108,17 +133,29 @@ function Slider() {
         </svg>
         <div className="display-vertically stretch">
             <h5>Vertical Scale</h5>
-            <input type="range" min="-150" max="30" value={scale.horizontal} className="slider" id="horScale" onChange={handleHorScale}/>
+            <div className="display-horizontally">
+                <input type="range" min="-150" max="30" value={scale[name].horizontal} className="slider" id="horScale" onChange={handleHorScale}/>
+                <input type="number" min="-150" max="30" value={scale[name].horizontal} id="horScaleNum" onChange={handleHorScale}/>
+            </div>
             <h5>Horizontal Scale</h5>
-            <input type="range" min="-150" max="30" value={scale.vertical} className="slider" id="verScale" onChange={handleVerScale}/>
+            <div className="display-horizontally">
+                <input type="range" min="-150" max="30" value={scale[name].vertical} className="slider" id="verScale" onChange={handleVerScale}/>
+                <input type="number" min="-150" max="30" value={scale[name].vertical} id="verScaleNum" onChange={handleVerScale}/>
+            </div>
             <h5>Vertical Offset</h5>
-            <input type="range" min="-50" max="50" value={offset.vertical} className="slider" id="vertical" onChange={handleVer}/>
+            <div className="display-horizontally">
+                <input type="range" min="-50" max="50" value={offset[name].vertical} className="slider" id="vertical" onChange={handleVer}/>
+                <input type="number" min="-50" max="50" value={offset[name].vertical} id="verticalNum" onChange={handleVer}/>
+            </div>
             <h5>Horizontal Offset</h5>
-            <input type="range" min="-50" max="50" value={offset.horizontal} className="slider" id="horizontal" onChange={handleHor}/>
+            <div className="display-horizontally">
+                <input type="range" min="-50" max="50" value={offset[name].horizontal} className="slider" id="horizontal" onChange={handleHor}/>
+                <input type="number" min="-50" max="50" value={offset[name].horizontal} id="horizontalNum" onChange={handleHor}/>
+            </div>
             <h5>Number of Rows</h5>
-            <input type="number" min="1" max="100" value={height} className="gridsize" id="gridwidth" placeholder="Grid Width" onChange={handleHeight}/>
+            <input type="number" min="1" max="100" value={height[name]} className="gridsize" id="gridwidth" placeholder="Grid Width" onChange={handleHeight}/>
             <h5>Number of Columns</h5>
-            <input type="number" min="1" max="100" value={width} className="gridsize" id="gridheight" placeholder="Grid Height" onChange={handleWidth}/>
+            <input type="number" min="1" max="100" value={width[name]} className="gridsize" id="gridheight" placeholder="Grid Height" onChange={handleWidth}/>
             <h5>Upload Image:</h5>
             <input type="file" onChange={handleUpload} />
         </div>
