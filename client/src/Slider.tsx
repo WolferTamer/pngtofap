@@ -8,7 +8,7 @@ function Slider({current} : SliderProps) {
     const [width, setWidth] = useState({[current]: 1})
     const [height, setHeight] = useState({[current]: 1})
     const [file, setFile] = useState(reactLogo);
-    const [scale, setScale] = useState({[current]:{horizontal: 0, vertical: 0}})
+    const [scale, setScale] = useState({[current]:{horizontal: 1, vertical: 1}})
     const [name, setName] = useState(current)
 
     useEffect( () => {
@@ -69,10 +69,19 @@ function Slider({current} : SliderProps) {
         // [red, green, blue, alpha]
         let colors: number[][] = []
         for(let grid of Object.keys(width)) {
+            let hordifference = 250+((500*scale[grid].vertical)/(width[grid]+1))-(250*scale[grid].vertical)
+            let verdifference = 250+((500*scale[grid].horizontal)/(height[grid]+1))-(250*scale[grid].horizontal)
+
+            let truehoroffset = (hordifference)*(offset[grid].horizontal/100)+250
+            let trueveroffset = (verdifference)*(offset[grid].vertical/100)+250
+
             for (var i = 1; i < width[grid]+1; i++) {
+                let horpos = i*((500*scale[grid].vertical)/(width[grid]+1))-(250*scale[grid].vertical)
                 for(var j =1; j < height[grid]+1; j++) {
-                    let y = Math.floor(((j*((500+scale[grid].horizontal)/(height[grid]+1))+offset[grid].vertical-(scale[grid].horizontal/2))/500)*imageData.height)
-                    let x = Math.floor(((i*((500+scale[grid].vertical)/(width[grid]+1))+offset[grid].horizontal-(scale[grid].vertical/2))/500)*imageData.width)
+                    let verpos = j*((500*scale[grid].horizontal)/(height[grid]+1))-(250*scale[grid].horizontal)
+                    console.log(hordifference+truehoroffset)
+                    let y = Math.floor(((verpos+trueveroffset)/500)*imageData.height)
+                    let x = Math.floor(((horpos+truehoroffset)/500)*imageData.width)
                     let index = ((y*imageData.width)+x)*4
                     colors.push([pixels[index],pixels[index+1],pixels[index+2],pixels[index+3]])
                     console.log(`x: ${x}, y: ${y}, ${[pixels[index],pixels[index+1],pixels[index+2],pixels[index+3]]}`)
@@ -106,18 +115,33 @@ function Slider({current} : SliderProps) {
         let indents = [];
         for(let grid of Object.keys(width)) {
             const stroke = grid === name ? "white" : "darkslategray"
+            let hordifference = 250+((500*scale[grid].vertical)/(width[grid]+1))-(250*scale[grid].vertical)
+            let verdifference = 250+((500*scale[grid].horizontal)/(height[grid]+1))-(250*scale[grid].horizontal)
+
+            let truehoroffset = (hordifference)*(offset[grid].horizontal/100)+250
+            let trueveroffset = (verdifference)*(offset[grid].vertical/100)+250
+
             for (var i = 1; i < width[grid]+1; i++) {
+                let horpos = i*((500*scale[grid].vertical)/(width[grid]+1))-(250*scale[grid].vertical)
                 for(var j =1; j < height[grid]+1; j++) {
-                    indents.push((<line x1="0" y1={j*((500+scale[grid].horizontal)/(height[grid]+1))+offset[grid].vertical-(scale[grid].horizontal/2)} x2={500} y2={j*((500+scale[grid].horizontal)/(height[grid]+1))+offset[grid].vertical-(scale[grid].horizontal/2)} stroke={stroke}/>))
+                    let verpos = j*((500*scale[grid].horizontal)/(height[grid]+1))-(250*scale[grid].horizontal)
+                    indents.push((<line x1="0" y1={verpos+trueveroffset} x2={500} y2={verpos+trueveroffset} stroke={stroke}/>))
                 }
-                indents.push((<line x1={i*((500+scale[grid].vertical)/(width[grid]+1))+offset[grid].horizontal-(scale[grid].vertical/2)} y1="0" x2={i*((500+scale[grid].vertical)/(width[grid]+1))+offset[grid].horizontal-(scale[grid].vertical/2)} y2={500} stroke={stroke}/>))
+                indents.push((<line x1={horpos+truehoroffset} y1="0" x2={horpos+truehoroffset} y2={500} stroke={stroke}/>))
             }
         }
         for (var i = 1; i < width[name]+1; i++) {
+            let hordifference = 250+((500*scale[name].vertical)/(width[name]+1))-(250*scale[name].vertical)
+            let verdifference = 250+((500*scale[name].horizontal)/(height[name]+1))-(250*scale[name].horizontal)
+
+            let truehoroffset = (hordifference)*(offset[name].horizontal/100)+250
+            let trueveroffset = (verdifference)*(offset[name].vertical/100)+250
+            let horpos = i*((500*scale[name].vertical)/(width[name]+1))-(250*scale[name].vertical)
             for(var j =1; j < height[name]+1; j++) {
-                indents.push((<line x1="0" y1={j*((500+scale[name].horizontal)/(height[name]+1))+offset[name].vertical-(scale[name].horizontal/2)} x2={500} y2={j*((500+scale[name].horizontal)/(height[name]+1))+offset[name].vertical-(scale[name].horizontal/2)} stroke="white"/>))
+                let verpos = j*((500*scale[name].horizontal)/(height[name]+1))-(250*scale[name].horizontal)
+                indents.push((<line x1="0" y1={verpos+trueveroffset} x2={500} y2={verpos+trueveroffset} stroke="white"/>))
             }
-            indents.push((<line x1={i*((500+scale[name].vertical)/(width[name]+1))+offset[name].horizontal-(scale[name].vertical/2)} y1="0" x2={i*((500+scale[name].vertical)/(width[name]+1))+offset[name].horizontal-(scale[name].vertical/2)} y2={500} stroke="white"/>))
+            indents.push((<line x1={horpos+truehoroffset} y1="0" x2={horpos+truehoroffset} y2={500} stroke="white"/>))
         }
         return indents;
     }
@@ -134,23 +158,23 @@ function Slider({current} : SliderProps) {
         <div className="display-vertically stretch">
             <h5>Vertical Scale</h5>
             <div className="display-horizontally">
-                <input type="range" min="-150" max="30" value={scale[name].horizontal} className="slider" id="horScale" onChange={handleHorScale}/>
-                <input type="number" min="-150" max="30" value={scale[name].horizontal} id="horScaleNum" onChange={handleHorScale}/>
+                <input type="range" min="0.0001" max="2" step="0.01" value={scale[name].horizontal} className="slider" id="horScale" onChange={handleHorScale}/>
+                <input type="number" min="0.0001" max="2" step="0.01" value={scale[name].horizontal} id="horScaleNum" onChange={handleHorScale}/>
             </div>
             <h5>Horizontal Scale</h5>
             <div className="display-horizontally">
-                <input type="range" min="-150" max="30" value={scale[name].vertical} className="slider" id="verScale" onChange={handleVerScale}/>
-                <input type="number" min="-150" max="30" value={scale[name].vertical} id="verScaleNum" onChange={handleVerScale}/>
+                <input type="range" min="0.0001" max="2" step="0.01" value={scale[name].vertical} className="slider" id="verScale" onChange={handleVerScale}/>
+                <input type="number" min="0.0001" max="2" step="0.01" value={scale[name].vertical} id="verScaleNum" onChange={handleVerScale}/>
             </div>
             <h5>Vertical Offset</h5>
             <div className="display-horizontally">
-                <input type="range" min="-50" max="50" value={offset[name].vertical} className="slider" id="vertical" onChange={handleVer}/>
-                <input type="number" min="-50" max="50" value={offset[name].vertical} id="verticalNum" onChange={handleVer}/>
+                <input type="range" min="-100" max="100" value={offset[name].vertical} className="slider" id="vertical" onChange={handleVer}/>
+                <input type="number" min="-100" max="100" value={offset[name].vertical} id="verticalNum" onChange={handleVer}/>
             </div>
             <h5>Horizontal Offset</h5>
             <div className="display-horizontally">
-                <input type="range" min="-50" max="50" value={offset[name].horizontal} className="slider" id="horizontal" onChange={handleHor}/>
-                <input type="number" min="-50" max="50" value={offset[name].horizontal} id="horizontalNum" onChange={handleHor}/>
+                <input type="range" min="-100" max="100" value={offset[name].horizontal} className="slider" id="horizontal" onChange={handleHor}/>
+                <input type="number" min="-100" max="100" value={offset[name].horizontal} id="horizontalNum" onChange={handleHor}/>
             </div>
             <h5>Number of Rows</h5>
             <input type="number" min="1" max="100" value={height[name]} className="gridsize" id="gridwidth" placeholder="Grid Width" onChange={handleHeight}/>
